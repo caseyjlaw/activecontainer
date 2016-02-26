@@ -1,9 +1,9 @@
-import getopt, sys, os, math, re
+import os, re, logging
 from os.path import exists as pathexists
 import numpy as np
 from sklearn.externals import joblib # for loading classifier
-from sklearn.preprocessing import Imputer
-from rtpipe.parsecands import read_candidates
+#from sklearn.preprocessing import Imputer
+#from rtpipe.parsecands import read_candidates
 from pickle_utils import *
 from sklearn_utils import *
 
@@ -13,7 +13,6 @@ logging.basicConfig(level=logging.INFO)
 
 # usage
 #loc_stats, prop_stats = read_candidates(f_in)
-#logging.info('Read %d candidates from %s.' % (len(loc_stats), f_in))
 #prop_stats = np.array(prop_stats)
 #feats = stat_features(prop_stats)
 #scores = classify(feats, rbversion)
@@ -25,7 +24,7 @@ def load_classifier(clf_file):
     return clf
 
 
-def classify(feats, rbversion, njobs=1, verbose=0):
+def classify(feats, rbversion, njobs=1, verbose=0, path=None):
 
     # validate RB version
     validate_rb_version(rbversion)
@@ -38,7 +37,10 @@ def classify(feats, rbversion, njobs=1, verbose=0):
 
     # load pickled classifier
     #
-    this_dir = os.path.split(os.path.abspath(__file__))[0]
+    if not path:
+        this_dir = os.path.split(os.path.abspath(__file__))[0]
+    else:
+        this_dir = path
     f_clfpkl = os.path.join(this_dir,"classify_ET.%s.pkl" % rbversion)
 
     if not os.path.isfile(f_clfpkl):
@@ -133,4 +135,4 @@ def extract_feats(data, feats_to_extract):
 
 
 def stat_features(stats):
-    return stats[:,[0,2,3,4,5,6,7,8]]
+    return stats[:,[0,4,5,6,7,8]]
