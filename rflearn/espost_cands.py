@@ -1,47 +1,52 @@
-import argparse
 import pickle
 import json
 import requests
 from datetime import datetime, timedelta
+from rtpipe.parsecands import read_candidates
 
-parser = argparse.ArgumentParser(description='Extract, transform and load veryfast candidate data.')
-parser.add_argument('-f', '--filename', type=str, dest='filename', required=True, help='candidate filename in pickle format')
+def read(candsfile, threshold=0):
+  """ Read candsfile and get """
 
-# Set arguments to appropriate variable
-args = parser.parse_args()
-file = args.filename
-alldata = []
+  state = pickle.load(open(candsfile))
+  loc, prop = read_candidates(candsfile, snrmin=threshold)
+  cands = {(tuple(loc[i]), tuple(prop[i])) for i in range(len(loc))}
+  return state, cands
 
-with open(file) as pkl:
-  state = pickle.load(pkl)
-  cands = pickle.load(pkl)
 
-# Generate dumy dates
-alldata = []
-time = datetime.now()
-date = time;
-for key in cands:
-  data = {}
-  date = date + timedelta(hours=1)
-  data['obs'] = '14A-425'
-  data['@timestamp'] = date.isoformat()+'Z'
-  data['scan'] = key[0]
-  data['segment'] = key[1]
-  data['integration'] = key[2]
-  data['dm'] = key[3]
-  data['dt'] = key[4]
-  value = cands[key]
-  data['snr'] = value[0]
-  idobj = {}
-  idobj['_id'] = data['obs'] + '_' + str(data['scan']) + '_' + str(data['segment'])+ '_' + str(data['integration'])
-  # print data
+def parse(state, cands):
+  """ Get cands info into form ready to post """
 
-  alldata.append({"index":idobj})
-  alldata.append(data)
+  alldata = []
 
-jsonStr = json.dumps(alldata,separators=(',', ':'))
-cleanjson = jsonStr.replace('}},','}}\n').replace('},','}\n').replace(']','').replace('[','')
-print cleanjson
-url = 'http://localhost:9200/veryfast/cands/_bulk?'
-r = requests.post(url, data=cleanjson)
-print r
+  time = datetime.now()
+  date = time
+  for key in cands:
+    data = {}
+
+    data['obs'] = '14A-425'
+    date = date + timedelta(hours=1)  # dummy date for now
+    data['@timestamp'] = date.isoformat()+'Z'
+    data['scan'] = key[0]
+    data['segment'] = key[1]
+    data['integration'] = key[2]
+    data['dm'] = key[3]
+    data['dt'] = key[4]
+    value = cands[key]
+    data['snr'] = value[0]
+    idobj = {}
+    idobj['_id'] = data['obs'] + '_' + str(data['scan']) + '_' + str(data['segment'])+ '_' + str(data['integration'])
+
+    alldata.append({"index":idobj})
+    alldata.append(data)
+
+  jsonStr = json.dumps(alldata,separators=(',', ':'))
+  cleanjson = jsonStr.replace('}},','}}\n').replace('},','}\n').replace(']','').replace('[','')
+
+  return cleanjson
+
+
+def post(cleanjson, url='http://localhost:9200/realfast/cands/_bulk?'):
+  """ Post json to elasticsearch instance """
+
+  r = requests.post(url, data=cleanjson)
+  print r
