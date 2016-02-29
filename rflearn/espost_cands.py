@@ -1,7 +1,7 @@
 import pickle
 import json
 import requests
-from datetime import datetime, timedelta
+#from datetime import datetime, timedelta
 from rtpipe.parsecands import read_candidates
 
 def read(candsfile, threshold=0):
@@ -9,7 +9,7 @@ def read(candsfile, threshold=0):
 
   state = pickle.load(open(candsfile))
   loc, prop = read_candidates(candsfile, snrmin=threshold)
-  cands = {(tuple(loc[i]), tuple(prop[i])) for i in range(len(loc))}
+  cands = dict((tuple(loc[i]), tuple(prop[i])) for i in range(len(loc)))
   return state, cands
 
 
@@ -18,14 +18,14 @@ def parse(state, cands):
 
   alldata = []
 
-  time = datetime.now()
-  date = time
+#  time = datetime.now()
+#  date = time
   for key in cands:
     data = {}
 
     data['obs'] = '14A-425'
-    date = date + timedelta(hours=1)  # dummy date for now
-    data['@timestamp'] = date.isoformat()+'Z'
+#    date = date + timedelta(hours=1)  # dummy date for now
+#    data['@timestamp'] = date.isoformat()+'Z'
     data['scan'] = key[0]
     data['segment'] = key[1]
     data['integration'] = key[2]
