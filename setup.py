@@ -9,5 +9,5 @@ setup(
     url = 'http://github.com/caseyjlaw/rflearn',
     packages = find_packages(),        # get all python scripts in real time
     dependency_links = ['http://github.com/caseyjlaw/rtpipe'],
-    install_requires=['scikit-learn'],  # will add elasticsearch some day
+    install_requires=['scikit-learn', 'sh'],  # will add elasticsearch some day
 )
