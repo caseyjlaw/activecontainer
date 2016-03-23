@@ -2,6 +2,9 @@ from sh import git
 import os, pickle
 
 
+std_files = ['classifier.pkl', 'testing.pkl', 'training.pkl']
+
+
 class ActiveGit():
     """ Use tags to identify versions of an active learning loop and classifier.
 
@@ -17,23 +20,30 @@ class ActiveGit():
     def __init__(self, repopath):
 
         self.repo = git.bake(_cwd=repopath)
+        self.repopath = repopath
 
         if os.path.exists(repopath):
             try:
-                contents = self.repo.bake('ls-files')()
-                if contents:
+                contents = [gf.rstrip('\n') for gf in self.repo.bake('ls-files')()]
+                if all([sf in contents for sf in std_files]):
                     print('ActiveGit defined from repo at {0}'.format(repopath))
                     print('Available versions: {0}'.format(','.join(self.versions)))
+                else:
+                    print('{0} does not include standard set of files {1}'.format(repopath, std_files))
             except:
-                print('Uninitialized repo found at {0}. Initializing...'.format(repopath))
-                self.repo.init()
-                self.repo.add('training.pkl')
-                self.repo.add('testing.pkl')
-                self.repo.add('classifier.pkl')
-                self.repo.commit(m='initial commit')
-                self.repo.tag('initial')
-                self.set_version('initial')
-                self.repo.branch('-d', 'master')
+                contents = os.listdir(repopath)
+                if all([sf in contents for sf in std_files]):
+                    print('Uninitialized repo found at {0}. Initializing...'.format(repopath))
+                    self.repo.init()
+                    self.repo.add('training.pkl')
+                    self.repo.add('testing.pkl')
+                    self.repo.add('classifier.pkl')
+                    self.repo.commit(m='initial commit')
+                    self.repo.tag('initial')
+                    self.set_version('initial')
+                    self.repo.branch('-d', 'master')
+                else:
+                    print('{0} does not include standard set of files {1}'.format(repopath, std_files))
         else:
             print('No repo or directory found at {0}'.format(repopath))
 
@@ -52,6 +62,13 @@ class ActiveGit():
     def versions(self):
         return sorted(self.repo.tag().stdout.rstrip('\n').split('\n'))
 
+
+    @property
+    def isvalid(self):
+        gcontents = [gf.rstrip('\n') for gf in self.repo.bake('ls-files')()]
+        fcontents = os.listdir(self.repopath)
+        return all([sf in gcontents for sf in std_files]) and all([sf in fcontents for sf in std_files])
+        
 
     def set_version(self, version):
         if version in self.versions:
@@ -75,14 +92,14 @@ class ActiveGit():
     def read_training_data(self):
         """ Read data dictionary from training.pkl """
 
-        data = pickle.load(open('training.pkl'))
+        data = pickle.load(open(os.path.join(self.repopath, 'training.pkl')))
         return data.keys(), data.values()
 
 
     def read_testing_data(self):
         """ Read data dictionary from testing.pkl """
 
-        data = pickle.load(open('testing.pkl'))
+        data = pickle.load(open(os.path.join(self.repopath, 'testing.pkl')))
         return data.keys(), data.values()
 
 
@@ -93,7 +110,7 @@ class ActiveGit():
 
         data = dict(zip(features, targets))
 
-        with open('training.pkl', 'w') as fp:
+        with open(os.path.join(self.repopath, 'training.pkl'), 'w') as fp:
             pickle.dump(data, fp)
 
 
@@ -104,7 +121,7 @@ class ActiveGit():
 
         data = dict(zip(features, targets))
 
-        with open('testing.pkl', 'w') as fp:
+        with open(os.path.join(self.repopath, 'testing.pkl'), 'w') as fp:
             pickle.dump(data, fp)
 
 
@@ -112,6 +129,8 @@ class ActiveGit():
 
     def commit_version(self, version, msg=''):
         """ Add tag, commit, and push changes """
+
+        assert version not in self.versions, 'Will not overwrite a version name.'
 
         if not msg:
             feat, targ = self.read_training_data()
@@ -121,6 +140,7 @@ class ActiveGit():
 
         self.repo.commit(m=msg, a=True)
         self.repo.tag(version)
+        self.set_version(version)
 
         try:
             self.repo.push('origin', '--tags') # be sure to push tags every time an update is made
