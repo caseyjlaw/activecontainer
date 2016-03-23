@@ -14,7 +14,8 @@ class ActiveGit():
 
     A version can be any string (such as used in rbversion), but can also be based on name of expert doing classification.
 
-    Note that only tags are used, so repo has no branches.
+    Tags are central to tracking classifier and data. 
+    Branch 'master' keeps latest and branch 'working' is used for active session.
     """
 
     def __init__(self, repopath):
@@ -26,8 +27,12 @@ class ActiveGit():
             try:
                 contents = [gf.rstrip('\n') for gf in self.repo.bake('ls-files')()]
                 if all([sf in contents for sf in std_files]):
-                    print('ActiveGit defined from repo at {0}'.format(repopath))
+                    print('ActiveGit initializing from repo at {0}'.format(repopath))
                     print('Available versions: {0}'.format(','.join(self.versions)))
+                    if 'working' in self.versions:
+                        print('Found working branch on initialization. Removing...')
+                        self.repo.checkout('master')
+                        self.repo.branch('working', d=True)                    
                 else:
                     print('{0} does not include standard set of files {1}'.format(repopath, std_files))
             except:
@@ -41,7 +46,6 @@ class ActiveGit():
                     self.repo.commit(m='initial commit')
                     self.repo.tag('initial')
                     self.set_version('initial')
-                    self.repo.branch('-d', 'master')
                 else:
                     print('{0} does not include standard set of files {1}'.format(repopath, std_files))
         else:
@@ -71,10 +75,12 @@ class ActiveGit():
         
 
     def set_version(self, version):
+# need some branch management logic here
+#        self.repo.branch('working', d=True)
         if version in self.versions:
             self._version = version
-            stdout = self.repo.checkout(version).stdout
-            print(stdout)
+            stdout = self.repo.checkout(version, b='working').stdout  # active version set in 'working' branch
+            print('Version {0} set'.format(version))
         else:
             print('Version {0} not found'.format(version))
 
@@ -124,10 +130,16 @@ class ActiveGit():
         with open(os.path.join(self.repopath, 'testing.pkl'), 'w') as fp:
             pickle.dump(data, fp)
 
+    def write_classifier(self, clf):
+        """ Write classifier object to pickle file """
+
+        with open(os.path.join(self.repopath, 'classifier.pkl'), 'w') as fp:
+            pickle.dump(clf, fp)
+
 
     # methods to commit, pull, push
 
-    def commit_version(self, version, msg=''):
+    def commit_version(self, version, msg=None):
         """ Add tag, commit, and push changes """
 
         assert version not in self.versions, 'Will not overwrite a version name.'
@@ -139,11 +151,15 @@ class ActiveGit():
             msg += 'Testing set has {0} examples.'.format(len(feat))
 
         self.repo.commit(m=msg, a=True)
+        self.repo.checkout('master')
+        self.update()
+        self.repo.merge('working')
+        self.repo.branch('working', d=True)
         self.repo.tag(version)
-        self.set_version(version)
 
         try:
-            self.repo.push('origin', '--tags') # be sure to push tags every time an update is made
+            stdout = self.repo.push('origin', 'master', '--tags').stdout
+            print(stdout)
         except:
             print('Push not working. Remote not defined?')
 
@@ -152,6 +168,7 @@ class ActiveGit():
         """ Pull latest versions/tags, if linked to github. """
 
         try:
-            self.repo.pull()
+            stdout = self.repo.pull().stdout
+            print(stdout)
         except:
             print('Pull not working. Remote not defined?')
