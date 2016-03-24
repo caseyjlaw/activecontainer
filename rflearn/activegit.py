@@ -29,7 +29,7 @@ class ActiveGit():
                 if all([sf in contents for sf in std_files]):
                     print('ActiveGit initializing from repo at {0}'.format(repopath))
                     print('Available versions: {0}'.format(','.join(self.versions)))
-                    if 'working' in self.versions:
+                    if 'working' in self.repo.branch().stdout:
                         print('Found working branch on initialization. Removing...')
                         self.repo.checkout('master')
                         self.repo.branch('working', d=True)                    
@@ -74,11 +74,18 @@ class ActiveGit():
         return all([sf in gcontents for sf in std_files]) and all([sf in fcontents for sf in std_files])
         
 
-    def set_version(self, version):
-# need some branch management logic here
-#        self.repo.branch('working', d=True)
+    def set_version(self, version, force=False):
         if version in self.versions:
             self._version = version
+            if 'working' in self.repo.branch().stdout:
+                if force:
+                    print('Found working branch. Removing...')
+                    self.repo.checkout('master')
+                    self.repo.branch('working', d=True)                    
+                else:
+                    print('Found working branch from previous session. Use force=True to remove it and start anew.')
+                    return
+
             stdout = self.repo.checkout(version, b='working').stdout  # active version set in 'working' branch
             print('Version {0} set'.format(version))
         else:
