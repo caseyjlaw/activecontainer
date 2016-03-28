@@ -19,6 +19,7 @@ class ActiveGit():
     """
 
     def __init__(self, repopath):
+        """ Set up activegit for repo at repopath. Checks out master branch (lastest commit) by default. """
 
         self.repo = git.bake(_cwd=repopath)
         self.repopath = repopath
@@ -32,7 +33,8 @@ class ActiveGit():
                     if 'working' in self.repo.branch().stdout:
                         print('Found working branch on initialization. Removing...')
                         self.repo.checkout('master')
-                        self.repo.branch('working', d=True)                    
+                        self.repo.branch('working', d=True)
+                    self.set_version(self.repo.describe(abbrev=0, tags=True))
                 else:
                     print('{0} does not include standard set of files {1}'.format(repopath, std_files))
             except:
