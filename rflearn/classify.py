@@ -15,8 +15,7 @@ def classify(feats, agpath, rbversion=None, njobs=1, verbose=0):
     """
 
     # validate RB version
-#    clfpkl = validate_rbversion(agpath, rbversion)
-# need to integrate this with new default, which is to check out master by default
+    clfpkl = validate_rbversion(agpath, rbversion)
 
     # load classifier and update classifier parameters according to user input
     try:
@@ -42,12 +41,13 @@ def load_classifier(clfpkl):
     return clf
 
 
-def validate_rbversion(agpath, rbversion):
+def validate_rbversion(agpath, rbversion=None):
     """ Confirm that version is available and return path to classifier """
 
     ag = activegit.ActiveGit(agpath)
-    assert rbversion in ag.versions
-    ag.set_version(rbversion)
+    if rbversion:
+        assert rbversion in ag.versions
+        ag.set_version(rbversion)
 
     clfpkl = os.path.join(ag.repopath, "classifier.pkl")
     if not os.path.isfile(clfpkl):
