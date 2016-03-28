@@ -34,7 +34,7 @@ class ActiveGit():
                         print('Found working branch on initialization. Removing...')
                         self.repo.checkout('master')
                         self.repo.branch('working', d=True)
-                    self.set_version(self.repo.describe(abbrev=0, tags=True))
+                    self.set_version(self.repo.describe(abbrev=0, tags=True).stdout.rstrip('\n'))
                 else:
                     print('{0} does not include standard set of files {1}'.format(repopath, std_files))
             except:
