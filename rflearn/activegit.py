@@ -32,8 +32,8 @@ class ActiveGit():
                     print('Available versions: {0}'.format(','.join(self.versions)))
                     if 'working' in self.repo.branch().stdout:
                         print('Found working branch on initialization. Removing...')
-                        self.repo.checkout('master')
-                        self.repo.branch('working', d=True)
+                        cmd = self.repo.checkout('master')
+                        cmd = self.repo.branch('working', d=True)
                     self.set_version(self.repo.describe(abbrev=0, tags=True).stdout.rstrip('\n'))
                 else:
                     print('{0} does not include standard set of files {1}'.format(repopath, std_files))
@@ -41,13 +41,13 @@ class ActiveGit():
                 contents = os.listdir(repopath)
                 if all([sf in contents for sf in std_files]):
                     print('Uninitialized repo found at {0}. Initializing...'.format(repopath))
-                    self.repo.init()
-                    self.repo.add('training.pkl')
-                    self.repo.add('testing.pkl')
-                    self.repo.add('classifier.pkl')
-                    self.repo.commit(m='initial commit')
-                    self.repo.tag('initial')
-                    self.set_version('initial')
+                    cmd = self.repo.init()
+                    cmd = self.repo.add('training.pkl')
+                    cmd = self.repo.add('testing.pkl')
+                    cmd = self.repo.add('classifier.pkl')
+                    cmd = self.repo.commit(m='initial commit')
+                    cmdn = self.repo.tag('initial')
+                    cmd = self.set_version('initial')
                 else:
                     print('{0} does not include standard set of files {1}'.format(repopath, std_files))
         else:
@@ -82,8 +82,8 @@ class ActiveGit():
             if 'working' in self.repo.branch().stdout:
                 if force:
                     print('Found working branch. Removing...')
-                    self.repo.checkout('master')
-                    self.repo.branch('working', d=True)                    
+                    cmd = self.repo.checkout('master')
+                    cmd = self.repo.branch('working', d=True)                    
                 else:
                     print('Found working branch from previous session. Use force=True to remove it and start anew.')
                     return
@@ -159,12 +159,12 @@ class ActiveGit():
             feat, targ = self.read_testing_data()
             msg += 'Testing set has {0} examples.'.format(len(feat))
 
-        self.repo.commit(m=msg, a=True)
-        self.repo.checkout('master')
+        cmd = self.repo.commit(m=msg, a=True)
+        cmd = self.repo.checkout('master')
         self.update()
-        self.repo.merge('working')
-        self.repo.branch('working', d=True)
-        self.repo.tag(version)
+        cmd = self.repo.merge('working')
+        cmd = self.repo.branch('working', d=True)
+        cmd = self.repo.tag(version)
 
         try:
             stdout = self.repo.push('origin', 'master', '--tags').stdout
