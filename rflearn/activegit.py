@@ -117,6 +117,12 @@ class ActiveGit():
         data = pickle.load(open(os.path.join(self.repopath, 'testing.pkl')))
         return data.keys(), data.values()
 
+    def read_classifier(self):
+        """ Load classifier from classifier.pkl """        
+
+        clf = pickle.load(open(os.path.join(self.repopath, 'classifier.pkl')))
+        return clf
+
 
     def write_training_data(self, features, targets):
         """ Write data dictionary to filename """
