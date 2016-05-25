@@ -1,10 +1,9 @@
-import os.path
-import logging
-from rflearn import activegit
-from sklearn.externals import joblib # for loading classifier
+import os.path, logging
+import activegit
 from numpy import nan_to_num
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def classify(feats, agpath, rbversion=None, njobs=1, verbose=0):
@@ -15,13 +14,16 @@ def classify(feats, agpath, rbversion=None, njobs=1, verbose=0):
     """
 
     # validate RB version
-    clfpkl = validate_rbversion(agpath, rbversion)
+    ag = activegit.ActiveGit(agpath)
+    if rbversion:
+        ag.set_version(version)
 
     # load classifier and update classifier parameters according to user input
     try:
-        clf = load_classifier(clfpkl)
+        clf = ag.read_classifier()
         clf.n_jobs  = njobs
         clf.verbose = verbose
+
         logging.info('generating predictions for %d samples...'% feats.shape[0])
         scores = clf.predict_proba(feats)[:,1]
     except:
@@ -35,6 +37,8 @@ def classify(feats, agpath, rbversion=None, njobs=1, verbose=0):
 
 def load_classifier(clfpkl):
     """ Loads a pre-trained classifier from file """
+
+    from sklearn.externals import joblib # for loading classifier
 
     clf = joblib.load(clfpkl)
     logging.info("loaded classifier from file {0}".format(clfpkl))

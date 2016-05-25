@@ -5,9 +5,8 @@ setup(
     description = 'rtpipe/realfast classification, active learning, and candidate indexing',
     author = 'Umaa Rebbapragada, Shakeh Khudikyan, Casey Law',
     author_email = 'caseyjlaw@gmail.com',
-    version = '0.1',
+    version = '0.2',
     url = 'http://github.com/caseyjlaw/rflearn',
     packages = find_packages(),        # get all python scripts in real time
-    dependency_links = ['http://github.com/caseyjlaw/rtpipe'],
-    install_requires=['scikit-learn', 'sh'],  # will add elasticsearch some day
+    install_requires=['rtpipe', 'scikit-learn', 'activegit'],  # will add elasticsearch some day
 )
