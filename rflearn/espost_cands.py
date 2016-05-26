@@ -5,8 +5,12 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def parse(candsfile):
-    """ Get cands info into form ready to post """
+def parse(candsfile, url='', onlyplots=False):
+    """ Get cands info into form ready to post 
+
+    optional url command gives location of candidate plots to filter parsed list
+    onlyplots says to filter by plots that exist at url
+    """
 
     loc, prop, state = read_candidates(candsfile, returnstate=True)
 
@@ -39,9 +43,12 @@ def parse(candsfile):
   
         idobj = {}
         idobj['_id'] = uniqueid
-        alldata.append({"index":idobj})
-        alldata.append(data)
-
+        if onlyplots:
+            if os.path.exists(os.path.join(url, data['candidate_png'])):
+                alldata.append({"index":idobj})
+                alldata.append(data)
+            else:
+                logger.info('Plot not found for {0}. Not including.'.format(data['candidate_png']))
 
     jsonStr = json.dumps(alldata,separators=(',', ':'))
     cleanjson = jsonStr.replace('}},','}}\n').replace('},','}\n').replace(']','').replace('[','')
