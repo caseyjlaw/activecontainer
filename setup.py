@@ -8,7 +8,7 @@ setup(
     version = '0.25',
     url = 'http://github.com/caseyjlaw/rflearn',
     packages = find_packages(),        # get all python scripts in real time
-    install_requires=['rtpipe', 'scikit-learn', 'activegit', 'click'],  # will add elasticsearch some day
+    install_requires=['rtpipe', 'scikit-learn', 'activegit', 'click', 'elasticsearch'],  # will add elasticsearch some day
     entry_points='''
         [console_scripts]
         rflearn=rflearn.cli:cli
