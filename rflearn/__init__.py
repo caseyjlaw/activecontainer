@@ -1,3 +1,3 @@
-__all__ = ['espost_cands', 'classify', 'features']
+__all__ = ['elastic', 'classify', 'features']
 
 from rflearn import *
