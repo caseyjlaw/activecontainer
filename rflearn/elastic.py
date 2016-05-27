@@ -81,10 +81,10 @@ def dataid(data):
 
 
 def getids():
-    """ Gets candidates from realfast index and returns them as dict """
+    """ Gets candidates from realfast index and returns them as list """
 
     res = es.search(index='realfast', doc_type='cand', fields=['_id'], body={"query": {"match_all": {}}, "size": 10000})
-    return = [hit['_id'] for hit in res['hits']['hits']]
+    return [hit['_id'] for hit in res['hits']['hits']]
 
 
 def addfield(datalist):
