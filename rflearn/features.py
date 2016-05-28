@@ -19,7 +19,8 @@ def image_features(im):
 
 def stat_features(stats):
     stats = np.array(stats)
-    return np.array(stats)[[0,4,5,6,7,8]]
+    return stats[:, [0,4,5,6,7,8]]
+
 
 def plot_imsp(im, spec, bin):
     pl.figure(figsize=(16,4))

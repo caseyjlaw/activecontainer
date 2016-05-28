@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def classify(feats, agpath, rbversion=None, njobs=1, verbose=0):
+def calcscores(feats, agpath, rbversion=None, njobs=1, verbose=0):
     """ Given feature array and classifier version, return a score per feature
 
     feats is a numpy array and number of features must match that of rbversion classifier.
@@ -15,22 +15,14 @@ def classify(feats, agpath, rbversion=None, njobs=1, verbose=0):
 
     # validate RB version
     ag = activegit.ActiveGit(agpath)
+    logger.info(ag.versions)
     if rbversion:
-        ag.set_version(version)
+        ag.set_version(rbversion)
+    logger.info(ag.version)
+    clf = ag.read_classifier()
 
-    # load classifier and update classifier parameters according to user input
-    try:
-        clf = ag.read_classifier()
-        clf.n_jobs  = njobs
-        clf.verbose = verbose
-
-        logging.info('generating predictions for %d samples...'% feats.shape[0])
-        scores = clf.predict_proba(feats)[:,1]
-    except:
-        print "ERROR running the classifier"
-        raise
-
-    logging.info('classified predictions done.')
+    logger.info('Generating predictions for {0} samples...'.format(feats.shape[0]))
+    scores = clf.predict_proba(feats)[:,1]
 
     return scores
 
@@ -41,7 +33,7 @@ def load_classifier(clfpkl):
     from sklearn.externals import joblib # for loading classifier
 
     clf = joblib.load(clfpkl)
-    logging.info("loaded classifier from file {0}".format(clfpkl))
+    logger.info("loaded classifier from file {0}".format(clfpkl))
     return clf
 
 

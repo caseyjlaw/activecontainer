@@ -1,16 +1,18 @@
 import json, requests, os
 from rtpipe.parsecands import read_candidates
 from elasticsearch import Elasticsearch
+import activegit
+from rflearn.features import stat_features
+from rflearn.classify import calcscores
 
 es = Elasticsearch(['136.152.227.149:9200'])  # index on berkeley macbook
 
-
-def postcands(candsfile):
-    """ Parse and post candidates to realfast index """
+def readandpush(candsfile):
+    """ Read and push candidates to realfast index """
 
     datalist = readcandsfile(candsfile)
-    cleanjson = datatojson(datalist)
-    postjson(cleanjson)
+    res = pushdata(datalist)
+    return res
 
 
 def readcandsfile(candsfile, plotdir='/users/claw/public_html/plots'):
@@ -22,6 +24,10 @@ def readcandsfile(candsfile, plotdir='/users/claw/public_html/plots'):
     loc, prop, state = read_candidates(candsfile, returnstate=True)
 
     fileroot = state['fileroot']
+    if plotdir:
+        print('Filtering data based on presence of png files in {0}'.format(plotdir))
+    else:
+        print('Appending all data to datalist.')
 
     datalist = []
     for i in range(len(loc)):
@@ -40,16 +46,45 @@ def readcandsfile(candsfile, plotdir='/users/claw/public_html/plots'):
         data['candidate_png'] = 'cands_{0}.png'.format(uniqueid)
 
         if plotdir:
-            print('Filtering data based on presence of png files in {0}'.format(plotdir))
             if os.path.exists(os.path.join(plotdir, data['candidate_png'])):
                 datalist.append(data)
-            else:
-                print('Plot not found for {0}. Not including.'.format(data['candidate_png']))
+#            else:
+#                print('Plot not found for {0}. Not including.'.format(data['candidate_png']))
         else:
-            print('Appending all data to datalist.')
             datalist.append(data)
 
     return datalist
+
+
+def classify(datalist, agpath='/users/claw/code/alnotebook'):
+    """ Applies activegit repo classifier to datalist """
+
+    keys, feats = restorecands(datalist)
+    statfeats = stat_features(feats)
+    scores = calcscores(statfeats, agpath=agpath)
+    return scores
+
+
+def restorecands(datalist, features=['snr1', 'immax1', 'l1', 'm1', 'specstd', 'specskew', 'speckurtosis', 'imskew', 'imkurtosis'],
+                featureind=['scan', 'segment', 'int', 'dmind', 'dtind', 'beamnum']):
+    """ Take list of dicts and forms as list of lists in rtpipe standard order """
+
+    keylist = []
+    featlist = []
+    for data in datalist:
+        key = []
+        feat = []
+
+        for fi in featureind:
+            key.append(data[fi])
+
+        for fe in features:
+            feat.append(data[fe])
+
+        keylist.append(tuple(key))
+        featlist.append(tuple(feat))
+
+    return (keylist, featlist)
 
 
 def pushdata(datalist, index='realfast', doc_type='cand', command='index'):
@@ -69,7 +104,7 @@ def pushdata(datalist, index='realfast', doc_type='cand', command='index'):
         elif command == 'update':
             res = es.update(index=index, doc_type=doc_type, id=uniqueid, body=data)
 
-        status.append(res['created'])
+        status.append(res)
 
     return status
 
