@@ -48,21 +48,10 @@ def readcandsfile(candsfile, plotdir='/users/claw/public_html/plots'):
         if plotdir:
             if os.path.exists(os.path.join(plotdir, data['candidate_png'])):
                 datalist.append(data)
-#            else:
-#                print('Plot not found for {0}. Not including.'.format(data['candidate_png']))
         else:
             datalist.append(data)
 
     return datalist
-
-
-def classify(datalist, agpath='/users/claw/code/alnotebook'):
-    """ Applies activegit repo classifier to datalist """
-
-    keys, feats = restorecands(datalist)
-    statfeats = stat_features(feats)
-    scores = calcscores(statfeats, agpath=agpath)
-    return scores
 
 
 def restorecands(datalist, features=['snr1', 'immax1', 'l1', 'm1', 'specstd', 'specskew', 'speckurtosis', 'imskew', 'imkurtosis'],
@@ -85,6 +74,15 @@ def restorecands(datalist, features=['snr1', 'immax1', 'l1', 'm1', 'specstd', 's
         featlist.append(tuple(feat))
 
     return (keylist, featlist)
+
+
+def classify(datalist, agpath='/users/claw/code/alnotebook'):
+    """ Applies activegit repo classifier to datalist """
+
+    keys, feats = restorecands(datalist)
+    statfeats = stat_features(feats)
+    scores = calcscores(statfeats, agpath=agpath)
+    return scores
 
 
 def pushdata(datalist, index='realfast', doc_type='cand', command='index'):

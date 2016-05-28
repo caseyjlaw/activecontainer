@@ -22,7 +22,7 @@ def calcscores(feats, agpath, rbversion=None, njobs=1, verbose=0):
     clf = ag.read_classifier()
 
     logger.info('Generating predictions for {0} samples...'.format(feats.shape[0]))
-    scores = clf.predict_proba(feats)[:,1]
+    scores = clf.predict_proba(nan_to_num(feats))[:,1]
 
     return scores
 
