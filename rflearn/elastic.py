@@ -120,7 +120,7 @@ def pushdata(datalist, index='realfast', doc_type='cand', command='index'):
         elif command == 'delete':
             res = es.delete(index=index, doc_type=doc_type, id=uniqueid)
 
-        status.append(res)
+        status.append(res['_shards']['successful'])
 
     return status
 

@@ -2,8 +2,7 @@ import os.path, logging
 import activegit
 from numpy import nan_to_num
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logging.basicConfig()
 
 
 def calcscores(feats, agpath, rbversion=None, njobs=1, verbose=0):
@@ -15,13 +14,13 @@ def calcscores(feats, agpath, rbversion=None, njobs=1, verbose=0):
 
     # validate RB version
     ag = activegit.ActiveGit(agpath)
-    logger.info(ag.versions)
+    logging.info(ag.versions)
     if rbversion:
         ag.set_version(rbversion)
-    logger.info(ag.version)
+    logging.info(ag.version)
     clf = ag.read_classifier()
 
-    logger.info('Generating predictions for {0} samples...'.format(feats.shape[0]))
+    logging.info('Generating predictions for {0} samples...'.format(feats.shape[0]))
     scores = clf.predict_proba(nan_to_num(feats))[:,1]
 
     return scores
@@ -33,7 +32,7 @@ def load_classifier(clfpkl):
     from sklearn.externals import joblib # for loading classifier
 
     clf = joblib.load(clfpkl)
-    logger.info("loaded classifier from file {0}".format(clfpkl))
+    logging.info("loaded classifier from file {0}".format(clfpkl))
     return clf
 
 

@@ -1,5 +1,7 @@
 import click
 import rflearn
+import logging
+logging.basicConfig()
 
 
 @click.group('rflearn')
@@ -9,7 +11,10 @@ def cli():
 
 @cli.command()
 @click.argument('candsfile')
-def postcands(candsfile):
+@click.option('--addscores', help='')
+@click.option('--tag', help='')
+@click.option('--command', help='')
+def readandpush(candsfile, addscores, tag, command):
     """ Candidate pickle file to post to realfast index"""
 
-    rflearn.elastic.postcands(candsfile)
+    rflearn.elastic.readandpush(candsfile, push=True)
