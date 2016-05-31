@@ -88,8 +88,10 @@ def restorecands(datalist, features=['snr1', 'immax1', 'l1', 'm1', 'specstd', 's
                 featureind=['scan', 'segment', 'int', 'dmind', 'dtind', 'beamnum']):
     """ Take list of dicts and forms as list of lists in rtpipe standard order """
 
+    obsdict = {}
     keylist = []
     featlist = []
+
     for data in datalist:
         key = []
         feat = []
@@ -102,8 +104,10 @@ def restorecands(datalist, features=['snr1', 'immax1', 'l1', 'm1', 'specstd', 's
 
         keylist.append(tuple(key))
         featlist.append(tuple(feat))
+        obs = ?
+        obsdict[obs] =  (keylist, featlist)
 
-    return (keylist, featlist)
+    return obsdict
 
 
 def classify(datalist, agpath='/users/claw/code/alnotebook'):
