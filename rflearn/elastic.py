@@ -7,12 +7,31 @@ from rflearn.classify import calcscores
 
 es = Elasticsearch(['136.152.227.149:9200'])  # index on berkeley macbook
 
-def readandpush(candsfile):
-    """ Read and push candidates to realfast index """
+
+def readandpush(candsfile, push=True, classify=True, tag=None):
+    """ Read, classify, and push candidates to realfast index.
+
+    Optionally push to index with scores. 
+    Optionally can add string to 'tag' field.
+    """
 
     datalist = readcandsfile(candsfile)
-    res = pushdata(datalist)
-    return res
+    if classify:
+        scores = classify(datalist)
+
+    if classify or tag:
+        for i in range(len(datalist)):
+            datalist[i]['rbscore'] = score[i]
+            if tag:
+                assert isintance(tag, str)
+                print('Tagging with {0}'.format(tag))
+                datalist[i]['tag'] = tag
+
+    if push:
+        res = pushdata(datalist)
+        print(res)
+
+    return datalist
 
 
 def readcandsfile(candsfile, plotdir='/users/claw/public_html/plots'):
@@ -118,12 +137,6 @@ def getids():
 
     res = es.search(index='realfast', doc_type='cand', fields=['_id'], body={"query": {"match_all": {}}, "size": 10000})
     return [hit['_id'] for hit in res['hits']['hits']]
-
-
-def addfield(datalist):
-    """ """
-
-    pass
 
 
 def postjson(cleanjson, url='http://136.152.227.149:9200/realfast/cand/_bulk?'):
