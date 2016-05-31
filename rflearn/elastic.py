@@ -74,15 +74,14 @@ def readcandsfile(candsfile, plotdir='/users/claw/public_html/plots'):
     return datalist
 
 
-def indextodatalist(features=['snr1', 'immax1', 'l1', 'm1', 'specstd', 'specskew', 'speckurtosis', 'imskew', 'imkurtosis'],
-                    featureind=['scan', 'segment', 'int', 'dmind', 'dtind', 'beamnum']):
-    """ Get all  """
+def indextodatalist():
+    """ Get all from index and return datalist """
 
 
     count = es.count()['count']
-    fields = ','.join(features + featureind + ['obs', 'candidate_png'])
-    res = es.search(index='realfast', doc_type='cand', fields=fields, body={"query": {"match_all": {}}, "size": count})
-    return [hit['fields'] for hit in res['hits']['hits']]
+#    fields = ','.join(features + featureind + ['obs', 'candidate_png'])
+    res = es.search(index='realfast', doc_type='cand', body={"query": {"match_all": {}}, "size": count})
+    return [hit['_source'] for hit in res['hits']['hits']]
 
 
 def restorecands(datalist, features=['snr1', 'immax1', 'l1', 'm1', 'specstd', 'specskew', 'speckurtosis', 'imskew', 'imkurtosis'],
