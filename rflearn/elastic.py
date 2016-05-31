@@ -74,6 +74,17 @@ def readcandsfile(candsfile, plotdir='/users/claw/public_html/plots'):
     return datalist
 
 
+def indextodatalist(features=['snr1', 'immax1', 'l1', 'm1', 'specstd', 'specskew', 'speckurtosis', 'imskew', 'imkurtosis'],
+                    featureind=['scan', 'segment', 'int', 'dmind', 'dtind', 'beamnum']):
+    """ Get all  """
+
+
+    count = es.count()['count']
+    fields = features + featureind + ['obs', 'candidate_png']
+    res = es.search(index='realfast', doc_type='cand', fields=fields, body={"query": {"match_all": {}}, "size": count})
+    return [hit['fields'] for hit in res['hits']['hits']]
+
+
 def restorecands(datalist, features=['snr1', 'immax1', 'l1', 'm1', 'specstd', 'specskew', 'speckurtosis', 'imskew', 'imkurtosis'],
                 featureind=['scan', 'segment', 'int', 'dmind', 'dtind', 'beamnum']):
     """ Take list of dicts and forms as list of lists in rtpipe standard order """
@@ -134,7 +145,8 @@ def dataid(data):
 def getids():
     """ Gets candidates from realfast index and returns them as list """
 
-    res = es.search(index='realfast', doc_type='cand', fields=['_id'], body={"query": {"match_all": {}}, "size": 10000})
+    count = es.count()['count']
+    res = es.search(index='realfast', doc_type='cand', fields=['_id'], body={"query": {"match_all": {}}, "size": count})
     return [hit['_id'] for hit in res['hits']['hits']]
 
 
