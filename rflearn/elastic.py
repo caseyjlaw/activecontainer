@@ -1,14 +1,15 @@
-import json, requests, os
+import json, requests, os, logging
 from rtpipe.parsecands import read_candidates
 from elasticsearch import Elasticsearch
 import activegit
 from rflearn.features import stat_features
 from rflearn.classify import calcscores
 
+logging.basicConfig()
 es = Elasticsearch(['136.152.227.149:9200'])  # index on berkeley macbook
 
 
-def readandpush(candsfile, push=True, classify=True, tag=None):
+def readandpush(candsfile, push=True, addscores=True, tag=None, command='index'):
     """ Read, classify, and push candidates to realfast index.
 
     Optionally push to index with scores. 
@@ -19,19 +20,19 @@ def readandpush(candsfile, push=True, classify=True, tag=None):
     if classify:
         scores = classify(datalist)
 
-    if classify or tag:
+    if addscores or tag:
         for i in range(len(datalist)):
-            datalist[i]['rbscore'] = score[i]
+            datalist[i]['rbscore'] = scores[i]
             if tag:
                 assert isintance(tag, str)
-                print('Tagging with {0}'.format(tag))
+                logging.info('Tagging with {0}'.format(tag))
                 datalist[i]['tag'] = tag
 
     if push:
-        res = pushdata(datalist)
-        print(res)
-
-    return datalist
+        res = pushdata(datalist, command=command)
+        logging.info('Post status: {0}'.format(res))
+    else:
+        return datalist
 
 
 def readcandsfile(candsfile, plotdir='/users/claw/public_html/plots'):
@@ -44,9 +45,9 @@ def readcandsfile(candsfile, plotdir='/users/claw/public_html/plots'):
 
     fileroot = state['fileroot']
     if plotdir:
-        print('Filtering data based on presence of png files in {0}'.format(plotdir))
+        logging.info('Filtering data based on presence of png files in {0}'.format(plotdir))
     else:
-        print('Appending all data to datalist.')
+        logging.info('Appending all data to datalist.')
 
     datalist = []
     for i in range(len(loc)):
@@ -107,7 +108,7 @@ def classify(datalist, agpath='/users/claw/code/alnotebook'):
 def pushdata(datalist, index='realfast', doc_type='cand', command='index'):
     """ Pushes list of data to index
 
-    command can be 'index', 'update', 'delete'
+    command can be 'index' or 'delete' (update by indexing with same key)
     """
 
     status = []
@@ -118,8 +119,6 @@ def pushdata(datalist, index='realfast', doc_type='cand', command='index'):
             res = es.index(index=index, doc_type=doc_type, id=uniqueid, body=data)
         elif command == 'delete':
             res = es.delete(index=index, doc_type=doc_type, id=uniqueid)
-        elif command == 'update':
-            res = es.update(index=index, doc_type=doc_type, id=uniqueid, body=data)
 
         status.append(res)
 
@@ -147,4 +146,4 @@ def postjson(cleanjson, url='http://136.152.227.149:9200/realfast/cand/_bulk?'):
 #    return cleanjson
 
     r = requests.post(url, data=cleanjson)
-    print('Post status: {0}'.format(r))
+    logging.info('Post status: {0}'.format(r))
