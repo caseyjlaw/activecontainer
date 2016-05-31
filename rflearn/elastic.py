@@ -80,7 +80,7 @@ def indextodatalist(features=['snr1', 'immax1', 'l1', 'm1', 'specstd', 'specskew
 
 
     count = es.count()['count']
-    fields = features + featureind + ['obs', 'candidate_png']
+    fields = ','.join(features + featureind + ['obs', 'candidate_png'])
     res = es.search(index='realfast', doc_type='cand', fields=fields, body={"query": {"match_all": {}}, "size": count})
     return [hit['fields'] for hit in res['hits']['hits']]
 
