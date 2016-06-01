@@ -4,6 +4,8 @@ from elasticsearch import Elasticsearch
 import activegit
 from rflearn.features import stat_features
 from rflearn.classify import calcscores
+from IPython.display import Image
+from IPython.core.display import HTML 
 
 logging.basicConfig()
 es = Elasticsearch(['136.152.227.149:9200'])  # index on berkeley macbook
@@ -64,6 +66,7 @@ def readcandsfile(candsfile, plotdir='/users/claw/public_html/plots'):
 
         uniqueid = dataid(data)
         data['candidate_png'] = 'cands_{0}.png'.format(uniqueid)
+        data['labeled'] = 0
 
         if plotdir:
             if os.path.exists(os.path.join(plotdir, data['candidate_png'])):
@@ -74,40 +77,48 @@ def readcandsfile(candsfile, plotdir='/users/claw/public_html/plots'):
     return datalist
 
 
-def indextodatalist():
+def indextodatalist(unlabeled=True):
     """ Get all from index and return datalist """
 
+    # add logic to filter for certain tag (e.g., labelled) or presence of certain field (e.g, rbscore)
+
+#    fields = ','.join(features + featureind + ['obs', 'candidate_png'])
 
     count = es.count()['count']
-#    fields = ','.join(features + featureind + ['obs', 'candidate_png'])
-    res = es.search(index='realfast', doc_type='cand', body={"query": {"match_all": {}}, "size": count})
+    if unlabeled:
+        res = es.search(index='realfast', doc_type='cand', body={"query": {"term": {"labeled": "0"}}})
+    else:
+        res = es.search(index='realfast', doc_type='cand', body={"query": {"match_all": {}}, "size": count})
+
     return [hit['_source'] for hit in res['hits']['hits']]
 
 
 def restorecands(datalist, features=['snr1', 'immax1', 'l1', 'm1', 'specstd', 'specskew', 'speckurtosis', 'imskew', 'imkurtosis'],
                 featureind=['scan', 'segment', 'int', 'dmind', 'dtind', 'beamnum']):
-    """ Take list of dicts and forms as list of lists in rtpipe standard order """
+    """ Take list of dicts and forms as list of lists in rtpipe standard order
 
-    obsdict = {}
-    keylist = []
-    featlist = []
+    Order of features and featureind lists is important.
+    """
+
+    obslist = []
+    loclist = []
+    proplist = []
 
     for data in datalist:
-        key = []
-        feat = []
-
+        # build features per data dict
+        loc = []
+        prop = []
         for fi in featureind:
-            key.append(data[fi])
-
+            loc.append(data[fi])
         for fe in features:
-            feat.append(data[fe])
+            prop.append(data[fe])
 
-        keylist.append(tuple(key))
-        featlist.append(tuple(feat))
-        obs = ?
-        obsdict[obs] =  (keylist, featlist)
+        # append data
+        obslist.append(data['obs'])
+        loclist.append(tuple(loc))
+        proplist.append(tuple(prop))
 
-    return obsdict
+    return obslist, loclist, proplist
 
 
 def classify(datalist, agpath='/users/claw/code/alnotebook'):

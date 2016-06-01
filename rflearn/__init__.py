@@ -1,3 +1,3 @@
-__all__ = ['elastic', 'classify', 'features']
+__all__ = ['elastic', 'classify', 'features', 'sklearn_utils']
 
 from rflearn import *

@@ -1,7 +1,7 @@
 import click
 import rflearn
 import logging
-logging.basicConfig()
+logger = logging.getLogger(__name__)
 
 
 @click.group('rflearn')
