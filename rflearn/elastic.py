@@ -18,17 +18,13 @@ def readandpush(candsfile, push=True, addscores=True, tag=None, command='index')
     Optionally can add string to 'tag' field.
     """
 
-    datalist = readcandsfile(candsfile)
+    datalist = readcandsfile(candsfile, tag=tag)
     if classify:
         scores = classify(datalist)
 
-    if addscores or tag:
+    if addscores:
         for i in range(len(datalist)):
             datalist[i]['rbscore'] = scores[i]
-            if tag:
-                assert isintance(tag, str)
-                logging.info('Tagging with {0}'.format(tag))
-                datalist[i]['tag'] = tag
 
     if push:
         res = pushdata(datalist, command=command)
@@ -37,11 +33,14 @@ def readandpush(candsfile, push=True, addscores=True, tag=None, command='index')
         return datalist
 
 
-def readcandsfile(candsfile, plotdir='/users/claw/public_html/plots'):
+def readcandsfile(candsfile, plotdir='/users/claw/public_html/plots', tag=None):
     """ Read candidates from pickle file and format as list of dictionaries
 
     plotdir is path to png plot files which are required in order to keep in datalist
     """
+
+    if tag:
+        assert isintance(tag, str)
 
     loc, prop, state = read_candidates(candsfile, returnstate=True)
 
@@ -66,7 +65,11 @@ def readcandsfile(candsfile, plotdir='/users/claw/public_html/plots'):
 
         uniqueid = dataid(data)
         data['candidate_png'] = 'cands_{0}.png'.format(uniqueid)
-        data['labeled'] = 0
+        data['labeled'] = '0'
+        if tag:
+            data['tag'] = tag
+        else:
+            data['tag'] = ''
 
         if plotdir:
             if os.path.exists(os.path.join(plotdir, data['candidate_png'])):
@@ -86,7 +89,7 @@ def indextodatalist(unlabeled=True):
 
     count = es.count()['count']
     if unlabeled:
-        res = es.search(index='realfast', doc_type='cand', body={"query": {"term": {"labeled": "0"}}})
+        res = es.search(index='realfast', doc_type='cand', body={"query": {"term": {"labeled": "0"}}, "size": count})
     else:
         res = es.search(index='realfast', doc_type='cand', body={"query": {"match_all": {}}, "size": count})
 
