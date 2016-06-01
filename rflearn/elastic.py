@@ -124,8 +124,8 @@ def restorecands(datalist, features=['snr1', 'immax1', 'l1', 'm1', 'specstd', 's
 def classify(datalist, agpath='/users/claw/code/alnotebook'):
     """ Applies activegit repo classifier to datalist """
 
-    keys, feats = restorecands(datalist)
-    statfeats = stat_features(feats)
+    obslist, loc, prop = restorecands(datalist)
+    statfeats = stat_features(prop)
     scores = calcscores(statfeats, agpath=agpath)
     return scores
 
