@@ -51,7 +51,12 @@ def plot_stamps(im, spec, bin):
 
 def calc_acc_fpr_fnr(targets, preds):
     cm = confusion_matrix(targets, preds)
-    tn, tp, fp, fn = cm[0,0], cm[1,1], cm[0,1], cm[1,0]
+    try:
+        tn, tp, fp, fn = cm[0,0], cm[1,1], cm[0,1], cm[1,0]
+    except IndexError:
+        tn = cm[0,0]
+        tp, fp, fn = 0, 0, 0
+
     return ((tp + tn) /float(tn + tp + fn + fp), fp / float(fp + tn), fn / float(fn + tp) )
 
 def image_stamp(im):
