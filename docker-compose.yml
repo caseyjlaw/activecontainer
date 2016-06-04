@@ -1,0 +1,13 @@
+version: '2'
+services:
+  jupyter:
+    build: .
+    ports:
+     - "8888:8888"
+    volumes:
+     - .:/data
+     - /Users/caseyjlaw/code/alnotebook:/data/agdir
+  elastic:
+    image: elasticsearch
+    ports:
+     - "9200:9200"
