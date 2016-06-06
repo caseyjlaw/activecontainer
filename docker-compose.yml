@@ -1,13 +1,27 @@
 version: '2'
 services:
   jupyter:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile_jupyter
     ports:
      - "8888:8888"
     volumes:
-     - .:/data
-     - /Users/caseyjlaw/code/alnotebook:/data/agdir
+     - .:/home
+     - /Users/caseyjlaw/code/alnotebook:/home/agdir
   elastic:
-    image: elasticsearch
+    build:
+      context: .
+      dockerfile: Dockerfile_elastic
+    command: elasticsearch
+    working_dir: /home
     ports:
      - "9200:9200"
+     - "9300:9300"
+  hub:
+    build:
+      context: .
+      dockerfile: Dockerfile_jupyterhub
+    working_dir: /home
+    ports:
+     - "8000:8000"

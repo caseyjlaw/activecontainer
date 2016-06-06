@@ -1,0 +1,34 @@
+# ---------------------------------- Cluster -----------------------------------
+#
+cluster.name: realfast
+node.name: candidate_data
+#
+# ----------------------------------- Paths ------------------------------------
+#
+path.data: /home
+path.logs: /home
+
+# ---------------------------------- Network -----------------------------------
+#
+# Set the bind address to a specific IP (IPv4 or IPv6):
+#
+#network.host: 136.152.227.149
+network.host: _non_loopback_ 
+
+#
+# Set a custom port for HTTP:
+#
+# http.port: 9200
+#http.cors.allow-credentials:true
+#http.cors.allow-headers:
+http.cors.enabled : true 
+http.cors.allow-origin : "*"
+http.cors.allow-methods : OPTIONS, HEAD, GET, POST, PUT, DELETE
+http.cors.allow-headers : X-Requested-With,X-Auth-Token,Content-Type, Content-Length
+http.jsonp.enable: true
+
+#
+# -------- IP filtering ----------------
+#
+shield.transport.filter.deny: _all
+shield.transport.filter.allow: ["*.nrao.edu", "*.berkeley.edu", "136.152.227.149"]
