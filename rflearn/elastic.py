@@ -8,7 +8,7 @@ from IPython.display import Image
 from IPython.core.display import HTML 
 
 logging.basicConfig()
-es = Elasticsearch(['136.152.227.149:9200'])  # index on berkeley macbook
+es = Elasticsearch(['realfast.berkeley.edu:9200'])  # index in berkeley cloud
 
 
 def readandpush(candsfile, push=True, addscores=True, tag=None, command='index'):
