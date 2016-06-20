@@ -1,11 +1,12 @@
-import json, requests, os, logging
+import json, requests, os.path, logging
+from shutil import copy
 from rtpipe.parsecands import read_candidates
 from elasticsearch import Elasticsearch
-import activegit
 from rflearn.features import stat_features
 from rflearn.classify import calcscores
 from IPython.display import Image
 from IPython.core.display import HTML 
+from numpy import isnan, nan_to_num
 
 logging.basicConfig()
 es = Elasticsearch(['realfast.berkeley.edu:9200'])  # index in berkeley cloud
@@ -18,7 +19,7 @@ def readandpush(candsfile, push=True, addscores=True, tag=None, command='index')
     Optionally can add string to 'tag' field.
     """
 
-    datalist = readcandsfile(candsfile, tag=tag)
+    datalist = readcandsfile(candsfile, tag=tag)  # fill plotdir before this
     if classify:
         scores = classify(datalist)
 
@@ -33,10 +34,11 @@ def readandpush(candsfile, push=True, addscores=True, tag=None, command='index')
         return datalist
 
 
-def readcandsfile(candsfile, plotdir='/users/claw/public_html/plots', tag=None):
+def readcandsfile(candsfile, plotdir='/users/claw/public_html/plots', tag=None, copyplots=True):
     """ Read candidates from pickle file and format as list of dictionaries
 
     plotdir is path to png plot files which are required in order to keep in datalist
+    optionally copies png files into plotdir
     """
 
     if tag:
@@ -61,7 +63,10 @@ def readcandsfile(candsfile, plotdir='/users/claw/public_html/plots', tag=None):
 
         for feat in state['features']:
             col = state['features'].index(feat)
-            data[feat] = prop[i][col]
+            if isnan(prop[i][col]):
+                data[feat] = nan_to_num(prop[i][col])
+            else:
+                data[feat] = prop[i][col]
 
         uniqueid = dataid(data)
         data['candidate_png'] = 'cands_{0}.png'.format(uniqueid)
@@ -71,7 +76,10 @@ def readcandsfile(candsfile, plotdir='/users/claw/public_html/plots', tag=None):
         else:
             data['tag'] = ''
 
+        # copy plot over and add path to datalist
         if plotdir:
+            if copyplots and os.path.exists(data['candidate_png']) and not os.path.exists(os.path.join(plotdir, data['candidate_png'])):
+                copy(data['candidate_png'], plotdir)
             if os.path.exists(os.path.join(plotdir, data['candidate_png'])):
                 datalist.append(data)
         else:
@@ -167,7 +175,7 @@ def getids():
     return [hit['_id'] for hit in res['hits']['hits']]
 
 
-def postjson(cleanjson, url='http://136.152.227.149:9200/realfast/cand/_bulk?'):
+def postjson(cleanjson, url='http://realfast.berkeley.edu:9200/realfast/cand/_bulk?'):
     """ **Deprecated** Post json to elasticsearch instance """
 
 #    jsonStr = json.dumps(postdata,separators=(',', ':'))
