@@ -70,9 +70,9 @@ def readcandsfile(candsfile, plotdir='/users/claw/public_html/plots', tag=None, 
 
         uniqueid = dataid(data)
         data['candidate_png'] = 'cands_{0}.png'.format(uniqueid)
-        data['labeled'] = '0'
+        data['labeled'] = '0'  # has this cand been labeled by active learning loop?
         if tag:
-            data['tag'] = tag
+            data['tag'] = tag  # care to add comma-delimited string to this cand?
         else:
             data['tag'] = ''
 
