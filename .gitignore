@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -60,3 +61,10 @@ target/
 
 #Ipython Notebook
 .ipynb_checkpoints
+=======
+build
+dist
+rflearn.egg-info
+*pyc
+*~
+>>>>>>> 99badb812aeae07017071d8d32228f5eab4086b4
